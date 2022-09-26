@@ -7,9 +7,10 @@ import (
 )
 
 type SDE struct {
-	Filename string
+	Filename string // filepath to the SDE .zip file
 }
 
+// WriteFileStructure writes out the fullpath to each document in the SDE zipfile
 func (sde *SDE) WriteFileStructure(outfile string) error {
 	zf, err := zip.OpenReader(sde.Filename)
 	if err != nil {

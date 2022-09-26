@@ -9,7 +9,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/vmw-pso/eve/sde"
 	"gopkg.in/yaml.v2"
 )
 
@@ -43,8 +42,9 @@ type SolarSystemData struct {
 }
 
 type Center struct {
-	Points []float64 `yml:"-"`
-	// X float64 `yaml:"x" csv:"x" json:"x"`
+	X float64 `yaml:"x" csv:"x" json:"x"`
+	Y float64 `yaml:"y" csv:"y" json:"y"`
+	Z float64 `yaml:"z" csv:"z" json:"z"`
 }
 
 type Planet struct {
@@ -120,42 +120,112 @@ type StartStatistics struct {
 }
 
 func main() {
-	archive := "./assets/202209_sde.zip" // file not exported to github as can be downloaded from CCP. Remove this had coding during development
-	sde := sde.SDE{Filename: archive}
+	// archive := "./assets/202209_sde.zip" // file not exported to github as can be downloaded from CCP. Remove this had coding during development
+	// sde := sde.SDE{Filename: archive}
 
-	sde.WriteFileStructure("202209_sde_content.txt")
+	// sde.WriteFileStructure("202209_sde_content.txt")
 
-	systems := kSpaceStaticData("./assets/202209_sde.zip", true)
-	print(len(systems))
+	// systems := joveStaticData("./assets/202209_sde.zip")
 
-	var solarSystemDump []SolarSystemData
+	// var solarSystemDump []SolarSystemData
 
-	for name, system := range systems {
-		systemData := SolarSystemData{
-			SolarSystemID:   system.SolarSystemID,
-			SolarSystemName: name,
-			SecurityStatus:  system.Security,
-			Planets:         len(system.Planets),
-			Moons:           moonCount(system.Planets),
-			AsteroidBelts:   asteroidBeltCount(system.Planets),
-			Stargates:       stargateCount(system.Stargates),
-		}
-		solarSystemDump = append(solarSystemDump, systemData)
-	}
+	// for name, system := range systems {
+	// 	systemData := SolarSystemData{
+	// 		SolarSystemID:   system.SolarSystemID,
+	// 		SolarSystemName: name,
+	// 		SecurityStatus:  system.Security,
+	// 		Planets:         len(system.Planets),
+	// 		Moons:           systemMoonCount(system.Planets),
+	// 		AsteroidBelts:   systemAsteroidBeltCount(system.Planets),
+	// 		Stargates:       systemStargateCount(system.Stargates),
+	// 	}
+	// 	solarSystemDump = append(solarSystemDump, systemData)
+	// }
 
-	jsonData, _ := json.Marshal(solarSystemDump)
-	os.WriteFile("solarsystems.json", jsonData, os.ModePerm)
+	// jsonData, _ := json.Marshal(solarSystemDump)
+	// os.WriteFile("jove.json", jsonData, os.ModePerm)
+
+	var kspace []SolarSystemData
+	file, _ := os.Open("solarsystems.json")
+	data, _ := io.ReadAll(file)
+	json.Unmarshal(data, &kspace)
+
+	highsec := highsecSystems(kspace)
+	lowsec := lowsecSystems(kspace)
+	nullsec := nullsecSystems(kspace)
+
+	var wormholes []SolarSystemData
+	file, _ = os.Open("wormholes.json")
+	data, _ = io.ReadAll(file)
+	json.Unmarshal(data, &wormholes)
+
+	var jove []SolarSystemData
+	file, _ = os.Open("jove.json")
+	data, _ = io.ReadAll(file)
+	json.Unmarshal(data, &jove)
+
+	fmt.Printf("%-10s%4d, Planets%8d, Moons%10d, Asteroid Belts%10d, Stargates%10d\n", "Highsec", len(highsec), totalPlanets(highsec), totalMoons(highsec), totalAsteroidBelts(highsec), totalStargates(highsec))
+	fmt.Printf("%-10s%4d, Planets%8d, Moons%10d, Asteroid Belts%10d, Stargates%10d\n", "Lowsec", len(lowsec), totalPlanets(lowsec), totalMoons(lowsec), totalAsteroidBelts(lowsec), totalStargates(lowsec))
+	fmt.Printf("%-10s%4d, Planets%8d, Moons%10d, Asteroid Belts%10d, Stargates%10d\n", "Nullsec", len(nullsec), totalPlanets(nullsec), totalMoons(nullsec), totalAsteroidBelts(nullsec), totalStargates(nullsec))
+	fmt.Printf("%-10s%4d, Planets%8d, Moons%10d, Asteroid Belts%10d, Stargates%10d\n", "Jove", len(jove), totalPlanets(jove), totalMoons(jove), totalAsteroidBelts(jove), totalStargates(jove))
+	fmt.Printf("%-10s%4d, Planets%8d, Moons%10d, Asteroid Belts%10d, Stargates%10d\n", "Wormholes", len(wormholes), totalPlanets(wormholes), totalMoons(wormholes), totalAsteroidBelts(wormholes), 0)
 }
 
-func stargateCount(stargates map[int]StarGate) int {
+func securityTypeCount(solarSystems []SolarSystemData) (int, int, int) {
+	highsec := 0
+	lowsec := 0
+	nullsec := 0
+	for _, system := range solarSystems {
+		if system.SecurityStatus >= 0.45 {
+			highsec++
+		} else if system.SecurityStatus > 0.0 {
+			lowsec++
+		} else {
+			nullsec++
+		}
+	}
+	return highsec, lowsec, nullsec
+}
+
+func highsecSystems(cluster []SolarSystemData) []SolarSystemData {
+	var highsec []SolarSystemData
+	for _, system := range cluster {
+		if system.SecurityStatus >= 0.45 {
+			highsec = append(highsec, system)
+		}
+	}
+	return highsec
+}
+
+func lowsecSystems(cluster []SolarSystemData) []SolarSystemData {
+	var lowsec []SolarSystemData
+	for _, system := range cluster {
+		if system.SecurityStatus > 0.0 && system.SecurityStatus < 0.45 {
+			lowsec = append(lowsec, system)
+		}
+	}
+	return lowsec
+}
+
+func nullsecSystems(cluster []SolarSystemData) []SolarSystemData {
+	var nullsec []SolarSystemData
+	for _, system := range cluster {
+		if system.SecurityStatus <= 0.0 && system.SecurityStatus < 0.45 {
+			nullsec = append(nullsec, system)
+		}
+	}
+	return nullsec
+}
+
+func systemStargateCount(stargates map[int]StarGate) int {
 	return len(stargates)
 }
 
-func planetCount(planets map[int]Planet) int {
+func systemPlanetCount(planets map[int]Planet) int {
 	return len(planets)
 }
 
-func moonCount(planets map[int]Planet) int {
+func systemMoonCount(planets map[int]Planet) int {
 	moons := 0
 	for _, planet := range planets {
 		moons += len(planet.Moons)
@@ -163,7 +233,39 @@ func moonCount(planets map[int]Planet) int {
 	return moons
 }
 
-func asteroidBeltCount(planets map[int]Planet) int {
+func totalPlanets(systems []SolarSystemData) int {
+	planets := 0
+	for _, system := range systems {
+		planets += system.Planets
+	}
+	return planets
+}
+
+func totalMoons(systems []SolarSystemData) int {
+	moons := 0
+	for _, system := range systems {
+		moons += system.Moons
+	}
+	return moons
+}
+
+func totalAsteroidBelts(systems []SolarSystemData) int {
+	belts := 0
+	for _, system := range systems {
+		belts += system.AsteroidBelts
+	}
+	return belts
+}
+
+func totalStargates(systems []SolarSystemData) int {
+	gates := 0
+	for _, system := range systems {
+		gates += system.Stargates
+	}
+	return gates
+}
+
+func systemAsteroidBeltCount(planets map[int]Planet) int {
 	asteroidBelts := 0
 	for _, planet := range planets {
 		asteroidBelts += len(planet.AsteroidBelts)
@@ -277,6 +379,89 @@ func kSpaceStaticData(zipFilename string, kspace bool) map[string]SolarSystem {
 		solarSystemName := getName(name)
 		if strings.Contains(name, "sde/fsd/universe/eve") {
 			if kspace && isJove(name) {
+				continue
+			}
+			if strings.Contains(name, "solarsystem.staticdata") {
+				data, err := file.Open()
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "%s: %s\n", name, err.Error())
+					os.Exit(1)
+				}
+
+				content, err := io.ReadAll(data)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "%s read error: %s\n", name, err.Error())
+					os.Exit(1)
+				}
+
+				var solarSystem SolarSystem
+				if err = yaml.Unmarshal(content, &solarSystem); err != nil {
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "unmarshal error in %s: %s\n", name, err.Error())
+						os.Exit(1)
+					}
+				}
+				solarSystems[solarSystemName] = solarSystem
+			}
+		}
+	}
+	return solarSystems
+}
+
+func wormholeStaticData(zipFilename string) map[string]SolarSystem {
+	solarSystems := make(map[string]SolarSystem)
+	zf, err := zip.OpenReader(zipFilename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		os.Exit(1)
+	}
+	defer zf.Close()
+
+	for _, file := range zf.File {
+		name := file.Name
+		solarSystemName := getName(name)
+		if strings.Contains(name, "sde/fsd/universe/wormhole") {
+			if strings.Contains(name, "solarsystem.staticdata") {
+				data, err := file.Open()
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "%s: %s\n", name, err.Error())
+					os.Exit(1)
+				}
+
+				content, err := io.ReadAll(data)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "%s read error: %s\n", name, err.Error())
+					os.Exit(1)
+				}
+
+				var solarSystem SolarSystem
+				if err = yaml.Unmarshal(content, &solarSystem); err != nil {
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "unmarshal error in %s: %s\n", name, err.Error())
+						os.Exit(1)
+					}
+				}
+				solarSystems[solarSystemName] = solarSystem
+			}
+		}
+	}
+	return solarSystems
+}
+
+func joveStaticData(zipFilename string) map[string]SolarSystem {
+	solarSystems := make(map[string]SolarSystem)
+	zf, err := zip.OpenReader(zipFilename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		os.Exit(1)
+	}
+	defer zf.Close()
+
+	for _, file := range zf.File {
+		name := file.Name
+		solarSystemName := getName(name)
+		if strings.Contains(name, "sde/fsd/universe/eve") {
+			if !isJove(name) {
 				continue
 			}
 			if strings.Contains(name, "solarsystem.staticdata") {

@@ -19,6 +19,16 @@ type SolarSystem struct {
 	Stargates     map[int]StarGate `yaml:"stargates" json:"stargates"`
 }
 
+type SolarSystemSummary struct {
+	SolarSystemID   int     `csv:"solarSystemID" json:"solarSystemId"`
+	SolarSystemName string  `csv:"solarSystemName" json:"solarSystemName"`
+	SecurityStatus  float64 `csv:"security" json:"security"`
+	Planets         int     `yaml:"planets" json:"planets,omitempty"`
+	Moons           int     `yaml:"moons" json:"moons,omitempty"`
+	AsteroidBelts   int     `yaml:"asteroidBelts" json:"asteroidBelts,omitempty"`
+	Stargates       int     `yaml:"stargates" json:"stargates,omitempty"`
+}
+
 type Center struct {
 	X float64 `yaml:"x" csv:"x" json:"x"`
 	Y float64 `yaml:"y" csv:"y" json:"y"`

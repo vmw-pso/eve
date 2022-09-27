@@ -134,7 +134,7 @@ func main() {
 	// 		SolarSystemID:   system.SolarSystemID,
 	// 		SolarSystemName: name,
 	// 		SecurityStatus:  system.Security,
-	// 		Planets:         len(system.Planets),
+	// 		Planets:         len(system.Planets)
 	// 		Moons:           systemMoonCount(system.Planets),
 	// 		AsteroidBelts:   systemAsteroidBeltCount(system.Planets),
 	// 		Stargates:       systemStargateCount(system.Stargates),

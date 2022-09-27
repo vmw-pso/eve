@@ -6,13 +6,25 @@ import (
 	"os"
 )
 
-type SDE struct {
-	Filename string // filepath to the SDE .zip file
+type sde struct {
+	filename     string // filepath to the SDE .zip file
+	solarSystems []*SolarSystem
+}
+
+func New(filename string) (*sde, error) {
+	s := &sde{
+		filename:     filename,
+		solarSystems: []*SolarSystem{},
+	}
+	if err := s.loadSolarSystems(); err != nil {
+		return nil, err
+	}
+	return s, nil
 }
 
 // WriteFileStructure writes out the fullpath to each document in the SDE zipfile
-func (sde *SDE) WriteFileStructure(outfile string) error {
-	zf, err := zip.OpenReader(sde.Filename)
+func (s *sde) WriteFileStructure(outfile string) error {
+	zf, err := zip.OpenReader(s.filename)
 	if err != nil {
 		return err
 	}

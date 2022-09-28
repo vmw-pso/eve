@@ -3,7 +3,12 @@ package sde
 import (
 	"archive/zip"
 	"bufio"
+	"encoding/json"
+	"io"
 	"os"
+	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 type sde struct {
@@ -42,4 +47,98 @@ func (s *sde) WriteFileStructure(outfile string) error {
 		writer.WriteString(document.Name + "\n")
 	}
 	return nil
+}
+
+func (s *sde) WriteSolarSystemsJSON(filename string) error {
+	data, err := json.Marshal(s.solarSystems)
+	if err != nil {
+		return err
+	}
+
+	if err = os.WriteFile(filename, data, os.ModePerm); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *sde) loadSolarSystems() error {
+	zf, err := zip.OpenReader(s.filename)
+	if err != nil {
+		return err
+	}
+	defer zf.Close()
+
+	for _, file := range zf.File {
+		if strings.Contains(file.Name, "solarsystem.staticdata") {
+			data, err := file.Open()
+			if err != nil {
+				return err
+			}
+
+			content, err := io.ReadAll(data)
+			if err != nil {
+				return err
+			}
+
+			var solarSystem SolarSystem
+			if err = yaml.Unmarshal(content, &solarSystem); err != nil {
+				if err != nil {
+					return err
+				}
+			}
+
+			solarSystem.SolarSystemTypeName = s.solarSystemTypeFromFile(file.Name)
+			solarSystem.SolarSystemName = s.systemNameFromFile(file.Name)
+			solarSystem.RegionName = s.regionNameFromFile(file.Name)
+			solarSystem.ConstellationName = s.constellationNameFromFile(file.Name)
+
+			s.solarSystems = append(s.solarSystems, &solarSystem)
+		}
+	}
+	return nil
+}
+
+func (s *sde) solarSystemTypeFromFile(filename string) string {
+	if !strings.Contains(filename, "solarsystem.staticdata") {
+		return ""
+	}
+	parts := strings.Split(filename, "/")
+	if len(parts) != 8 {
+		return ""
+	}
+	return parts[3] // return "eve", "abyssal", "wormhole", "void"
+}
+
+func (s *sde) regionNameFromFile(filename string) string {
+	if !strings.Contains(filename, "solarsystem.staticdata") {
+		return ""
+	}
+	parts := strings.Split(filename, "/")
+	if len(parts) != 8 {
+		return ""
+	}
+	return parts[4]
+}
+
+func (s *sde) constellationNameFromFile(filename string) string {
+	if !strings.Contains(filename, "solarsystem.staticdata") {
+		return ""
+	}
+	parts := strings.Split(filename, "/")
+	if len(parts) != 8 {
+		return ""
+	}
+	return parts[5]
+}
+
+func (s *sde) systemNameFromFile(filename string) string {
+	if !strings.Contains(filename, "solarsystem.staticdata") {
+		return ""
+	}
+	parts := strings.Split(filename, "/")
+	if len(parts) != 8 {
+		return ""
+	}
+	return parts[6]
 }

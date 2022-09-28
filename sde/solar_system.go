@@ -1,24 +1,20 @@
 package sde
 
 import (
-	"archive/zip"
-	"errors"
-	"fmt"
+	"encoding/json"
 	"io"
-	"strings"
-
-	"gopkg.in/yaml.v2"
+	"os"
 )
 
 type SolarSystem struct {
 	Border              bool             `yaml:"border" csv:"border" json:"border"`
-	Center              Center           `yaml:"center" json:"center"`
+	Center              []float64        `yaml:"center" json:"center"`
 	Corridor            bool             `yaml:"corridor" csv:"corridor" json:"corridor"`
 	Fringe              bool             `yaml:"fringe" csv:"fringe" json:"fringe"`
 	Hub                 bool             `yaml:"hub" csv:"hub" json:"hub"`
 	International       bool             `yaml:"international" csv:"international" json:"international"`
-	Max                 Center           `yaml:"max" json:"max"`
-	Min                 Center           `yaml:"min" json:"min"`
+	Max                 []float64        `yaml:"max" json:"max"`
+	Min                 []float64        `yaml:"min" json:"min"`
 	Planets             map[int]Planet   `yaml:"planets.omitEmpty" json:"planets,omitempty"`
 	Radius              float64          `yaml:"radius" csv:"radius" json:"radius"`
 	Regional            bool             `yaml:"regional" csv:"regional" json:"regional"`
@@ -30,7 +26,7 @@ type SolarSystem struct {
 	RegionName          string           `csv:"regionName,omitempty" json:"regionName,omitempty"`
 	ConstellationName   string           `csv:"constellationName,omitEmpty" json:"constellationName,omitempty"`
 	Star                Star             `yaml:"star" json:"star"`
-	Stargates           map[int]StarGate `yaml:"stargates" json:"stargates"`
+	Stargates           map[int]StarGate `yaml:"stargates,omitempty" json:"stargates,omitempty"`
 }
 
 type SolarSystemSummary struct {
@@ -46,18 +42,12 @@ type SolarSystemSummary struct {
 	Stargates         int     `yaml:"stargates" json:"stargates,omitempty"`
 }
 
-type Center struct {
-	X float64 `yaml:"x" csv:"x" json:"x"`
-	Y float64 `yaml:"y" csv:"y" json:"y"`
-	Z float64 `yaml:"z" csv:"z" json:"z"`
-}
-
 type Planet struct {
 	AsteroidBelts    map[int]AsteroidBelt `yaml:"asteroidBelts" json:"asteroidBelts,omitempty"`
 	Moons            map[int]Moon         `yaml:"moons,omitempty" json:"moons,omitempty"`
 	CelestialIndex   int                  `yaml:"celestialIndex" csv:"celestialIndex" json:"celestialIndex"`
 	PlanetAttributes PlanetAttributes     `yaml:"planetAttributes" json:"planetAttributes"`
-	Position         Center               `yaml:"position" json:"position"`
+	Position         []float64            `yaml:"position" json:"position"`
 	Radius           float64              `yaml:"radius" json:"radius"`
 	Statistics       Statistics           `yaml:"statistics" json:"statistics"`
 	TypeID           int                  `yaml:"typeID" json:"typeId"`
@@ -90,23 +80,23 @@ type Statistics struct {
 }
 
 type AsteroidBelt struct {
-	Position   Center     `yaml:"position" json:"position"`
+	Position   []float64  `yaml:"position" json:"position"`
 	Statistics Statistics `yaml:"statistics" json:"statistics"`
 	TypeID     int        `yaml:"typeID" json:"typeId"`
 }
 
 type Moon struct {
 	PlanetAttributes PlanetAttributes `yaml:"planetAttributes" json:"planetAttributes"`
-	Position         Center           `yaml:"center" json:"center"`
+	Position         []float64        `yaml:"center" json:"center"`
 	Radius           float64          `yaml:"radius" json:"radius"`
 	Statistics       Statistics       `yaml:"statistics" json:"statistics"`
 	TypeID           int              `yaml:"typeID" json:"typeId"`
 }
 
 type StarGate struct {
-	Destination int    `yaml:"destination" json:"destination,omitempty"`
-	Position    Center `yaml:"position" json:"position"`
-	TypeID      int    `yaml:"typeID" json:"typeId"`
+	Destination int       `yaml:"destination" json:"destination,omitempty"`
+	Position    []float64 `yaml:"position" json:"position"`
+	TypeID      int       `yaml:"typeID" json:"typeId"`
 }
 
 type Star struct {
@@ -124,104 +114,50 @@ type StartStatistics struct {
 	Temperature   float64 `yaml:"temperature" json:"temperature"`
 }
 
-func (s *sde) loadSolarSystems() error {
-	zf, err := zip.OpenReader(s.filename)
+type cluster struct {
+	solarSystems []SolarSystem
+}
+
+func NewFromJSON(filename string) (*cluster, error) {
+	file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer zf.Close()
+	defer file.Close()
 
-	for _, file := range zf.File {
-		if strings.Contains(file.Name, "solarsystem.staticdata") {
-			data, err := file.Open()
-			if err != nil {
-				errorStr := fmt.Sprintf("%s: %s", file.Name, err)
-				return errors.New(errorStr)
-			}
-
-			content, err := io.ReadAll(data)
-			if err != nil {
-				errorStr := fmt.Sprintf("%s: %s", file.Name, err)
-				return errors.New(errorStr)
-			}
-
-			var solarSystem SolarSystem
-			if err = yaml.Unmarshal(content, &solarSystem); err != nil {
-				if err != nil {
-					errorStr := fmt.Sprintf("%s: %s", file.Name, err)
-					return errors.New(errorStr)
-				}
-			}
-
-			solarSystem.SolarSystemTypeName = s.solarSystemTypeFromFile(file.Name)
-			solarSystem.SolarSystemName = s.systemNameFromFile(file.Name)
-			solarSystem.RegionName = s.regionNameFromFile(file.Name)
-			solarSystem.ConstellationName = s.constellationNameFromFile(file.Name)
-
-			s.solarSystems = append(s.solarSystems, &solarSystem)
-		}
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
 	}
-	return nil
+
+	var c cluster
+
+	err = json.Unmarshal(data, &c.solarSystems)
+	if err != nil {
+		return nil, err
+	}
+
+	return &c, nil
 }
 
-func (s *sde) solarSystemTypeFromFile(filename string) string {
-	if !strings.Contains(filename, "solarsystem.staticdata") {
-		return ""
-	}
-	parts := strings.Split(filename, "/")
-	if len(parts) != 8 {
-		return ""
-	}
-	return parts[3] // return "eve", "abyssal", "wormhole", "void"
-}
-
-func (s *sde) regionNameFromFile(filename string) string {
-	if !strings.Contains(filename, "solarsystem.staticdata") {
-		return ""
-	}
-	parts := strings.Split(filename, "/")
-	if len(parts) != 8 {
-		return ""
-	}
-	return parts[4]
-}
-
-func (s *sde) constellationNameFromFile(filename string) string {
-	if !strings.Contains(filename, "solarsystem.staticdata") {
-		return ""
-	}
-	parts := strings.Split(filename, "/")
-	if len(parts) != 8 {
-		return ""
-	}
-	return parts[5]
-}
-
-func (s *sde) systemNameFromFile(filename string) string {
-	if !strings.Contains(filename, "solarsystem.staticdata") {
-		return ""
-	}
-	parts := strings.Split(filename, "/")
-	if len(parts) != 8 {
-		return ""
-	}
-	return parts[6]
-}
-
-func (s *sde) SystemsWithSecurity(min, max float64) []*SolarSystem {
+func (c *cluster) SystemsWithSecurity(min, max float64) []*SolarSystem {
 	var systems []*SolarSystem
-	for _, system := range s.solarSystems {
+	for _, system := range c.solarSystems {
 		if system.Security > min && system.Security <= max {
-			systems = append(systems, system)
+			systems = append(systems, &system)
 		}
 	}
 	return systems
 }
 
-func (s *sde) HighsecSystems() []*SolarSystem {
-	return s.SystemsWithSecurity(0.45, 1.0)
+func (c *cluster) HighsecSystems() []*SolarSystem {
+	return c.SystemsWithSecurity(0.45, 1.0)
 }
 
-func (s *sde) LowsecSystems() []*SolarSystem {
-	return s.SystemsWithSecurity(0.0, 0.44)
+func (c *cluster) LowsecSystems() []*SolarSystem {
+	return c.SystemsWithSecurity(0.0, 0.44)
+}
+
+func (c *cluster) TotalSystemNumber() int {
+	return len(c.solarSystems)
 }

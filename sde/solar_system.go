@@ -210,3 +210,13 @@ func isJove(solarSystem SolarSystem) bool {
 	}
 	return false
 }
+
+func (c *cluster) SystemsByConstellation(constellationName string) []*SolarSystem {
+	var constellation []*SolarSystem
+	for _, system := range c.solarSystems {
+		if system.ConstellationName == constellationName {
+			constellation = append(constellation, &system)
+		}
+	}
+	return constellation
+}

@@ -64,54 +64,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println(solarsystems.TotalSystemNumber())
+	kspace := solarsystems.KSpaceSystems()
+
+	highsec := solarsystems.HighsecSystems()
+	lowsec := solarsystems.LowsecSystems()
+	nullsec := solarsystems.NullsecSystems()
+	wormholes := solarsystems.JSpaceSystems()
+
+	fmt.Println("K Space", kspace.SystemCount(), ", Regions", kspace.RegionCount())
+	fmt.Println("Highsec", highsec.SystemCount(), ", Regions", highsec.RegionCount())
+	fmt.Println("Lowsec", lowsec.SystemCount(), ", Regions", lowsec.RegionCount())
+	fmt.Println("Nullsec", nullsec.SystemCount(), ", Regions", nullsec.RegionCount())
+	fmt.Println("Wormholes", wormholes.SystemCount(), ", Regions", wormholes.RegionCount())
 }
-
-// func securityTypeCount(solarSystems []SolarSystemData) (int, int, int) {
-// 	highsec := 0
-// 	lowsec := 0
-// 	nullsec := 0
-// 	for _, system := range solarSystems {
-// 		if system.SecurityStatus >= 0.45 {
-// 			highsec++
-// 		} else if system.SecurityStatus > 0.0 {
-// 			lowsec++
-// 		} else {
-// 			nullsec++
-// 		}
-// 	}
-// 	return highsec, lowsec, nullsec
-// }
-
-// func highsecSystems(cluster []SolarSystemData) []SolarSystemData {
-// 	var highsec []SolarSystemData
-// 	for _, system := range cluster {
-// 		if system.SecurityStatus >= 0.45 {
-// 			highsec = append(highsec, system)
-// 		}
-// 	}
-// 	return highsec
-// }
-
-// func lowsecSystems(cluster []SolarSystemData) []SolarSystemData {
-// 	var lowsec []SolarSystemData
-// 	for _, system := range cluster {
-// 		if system.SecurityStatus > 0.0 && system.SecurityStatus < 0.45 {
-// 			lowsec = append(lowsec, system)
-// 		}
-// 	}
-// 	return lowsec
-// }
-
-// func nullsecSystems(cluster []SolarSystemData) []SolarSystemData {
-// 	var nullsec []SolarSystemData
-// 	for _, system := range cluster {
-// 		if system.SecurityStatus <= 0.0 && system.SecurityStatus < 0.45 {
-// 			nullsec = append(nullsec, system)
-// 		}
-// 	}
-// 	return nullsec
-// }
 
 // func systemStargateCount(stargates map[int]StarGate) int {
 // 	return len(stargates)
@@ -167,21 +132,6 @@ func main() {
 // 		asteroidBelts += len(planet.AsteroidBelts)
 // 	}
 // 	return asteroidBelts
-// }
-
-// func readAll(file *zip.File) ([]byte, error) {
-// 	fc, err := file.Open()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer fc.Close()
-
-// 	content, err := io.ReadAll(fc)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return content, nil
 // }
 
 // func Add(regions []string, region string) []string {

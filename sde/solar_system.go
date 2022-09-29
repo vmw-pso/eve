@@ -140,24 +140,73 @@ func NewFromJSON(filename string) (*cluster, error) {
 	return &c, nil
 }
 
-func (c *cluster) SystemsWithSecurity(min, max float64) []*SolarSystem {
-	var systems []*SolarSystem
+func (c *cluster) SystemsWithSecurity(min, max float64) cluster {
+	var systems cluster
 	for _, system := range c.solarSystems {
 		if system.Security > min && system.Security <= max {
-			systems = append(systems, &system)
+			systems.solarSystems = append(systems.solarSystems, system)
 		}
 	}
 	return systems
 }
 
-func (c *cluster) HighsecSystems() []*SolarSystem {
+func (c *cluster) HighsecSystems() cluster {
 	return c.SystemsWithSecurity(0.45, 1.0)
 }
 
-func (c *cluster) LowsecSystems() []*SolarSystem {
-	return c.SystemsWithSecurity(0.0, 0.44)
+func (c *cluster) LowsecSystems() cluster {
+	return c.SystemsWithSecurity(0.0, 0.45)
 }
 
-func (c *cluster) TotalSystemNumber() int {
+func (c *cluster) NullsecSystems() cluster {
+	kspace := c.KSpaceSystems()
+	var systems cluster
+	for _, system := range kspace.solarSystems {
+		if system.Security <= 0.0 && !isJove(system) {
+			systems.solarSystems = append(systems.solarSystems, system)
+		}
+	}
+	return systems
+}
+
+func (c *cluster) SystemCount() int {
 	return len(c.solarSystems)
+}
+
+func (c *cluster) RegionCount() int {
+	regions := make(map[string]int)
+	for _, system := range c.solarSystems {
+		regions[system.RegionName] = 1
+	}
+	return len(regions)
+}
+
+func (c *cluster) KSpaceSystems() cluster {
+	var systems []SolarSystem
+	for _, system := range c.solarSystems {
+		if system.SolarSystemTypeName == "eve" {
+			systems = append(systems, system)
+		}
+	}
+	return cluster{solarSystems: systems}
+}
+
+func (c *cluster) JSpaceSystems() cluster {
+	var systems []SolarSystem
+	for _, system := range c.solarSystems {
+		if system.SolarSystemTypeName == "wormhole" {
+			systems = append(systems, system)
+		}
+	}
+	return cluster{solarSystems: systems}
+}
+
+func isJove(solarSystem SolarSystem) bool {
+	jove := []string{"A821-A", "J7HZ-F", "UUA-F4"}
+	for _, region := range jove {
+		if solarSystem.RegionName == region {
+			return true
+		}
+	}
+	return false
 }

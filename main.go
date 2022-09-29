@@ -76,6 +76,12 @@ func main() {
 	fmt.Println("Lowsec", lowsec.SystemCount(), ", Regions", lowsec.RegionCount())
 	fmt.Println("Nullsec", nullsec.SystemCount(), ", Regions", nullsec.RegionCount())
 	fmt.Println("Wormholes", wormholes.SystemCount(), ", Regions", wormholes.RegionCount())
+
+	serthoulde := kspace.SystemsInConstellation("Serthoulde")
+	fmt.Println("Serthoulde:")
+	for _, system := range serthoulde {
+		fmt.Printf("  - %s\n", system.SolarSystemName)
+	}
 }
 
 // func systemStargateCount(stargates map[int]StarGate) int {

@@ -169,6 +169,16 @@ func (c *Cluster) NullsecSystems() Cluster {
 	return systems
 }
 
+func (c *Cluster) AbyssalSystems() Cluster {
+	var systems Cluster
+	for _, system := range c.SolarSystems {
+		if system.SolarSystemTypeName == "abyssal" {
+			systems.SolarSystems = append(systems.SolarSystems, system)
+		}
+	}
+	return systems
+}
+
 func (c *Cluster) SystemCount() int {
 	return len(c.SolarSystems)
 }

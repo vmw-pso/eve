@@ -8,6 +8,16 @@ import (
 	"github.com/vmw-pso/eve/sde"
 )
 
+type Stats struct {
+	TotalKills    int `json:"totalKills"`
+	HighsecKills  int `json:"highsecKills"`
+	LowsecKills   int `json:"lowsecKills"`
+	NullsecKills  int `json:"nullsecKills"`
+	WormholeKills int `json:"wormholeKills"`
+	AbyssalKills  int `json:"abyssalKills"`
+	VoidKills     int `json:"voidKills"`
+}
+
 func NewAnalyzer(filename string) (*mer, error) {
 	fmt.Println("Creating new analyzer")
 	mer := &mer{
@@ -20,7 +30,7 @@ func NewAnalyzer(filename string) (*mer, error) {
 	return mer, nil
 }
 
-func (m *mer) Analyze() error {
+func (m *mer) Analyze() (Stats, error) {
 	fmt.Println("Analyzing...")
 	solarsystems, _ := sde.NewFromJSON("solarsystems.json")
 	highsec := solarsystems.HighsecSystems()
@@ -28,15 +38,16 @@ func (m *mer) Analyze() error {
 	nullsec := solarsystems.NullsecSystems()
 	wormholes := solarsystems.JSpaceSystems()
 	abyssal := solarsystems.AbyssalSystems()
-	void := solarsystems.VoidSystems()
-	fmt.Printf("Total kills: %d\n", len(m.rows))
-	fmt.Printf("Highsec Kills: %d\n", m.Kills(&highsec))
-	fmt.Printf("Lowsec Kills: %d\n", m.Kills(&lowsec))
-	fmt.Printf("Nullsec Kills: %d\n", m.Kills(&nullsec))
-	fmt.Printf("Wormhole Kills: %d\n", m.Kills(&wormholes))
-	fmt.Printf("Abyssal Kills: %d\n", m.Kills(&abyssal))
-	fmt.Printf("Void Kills: %d\n", m.Kills(&void))
-	return nil
+	// void := solarsystems.VoidSystems()
+	stats := Stats{
+		TotalKills:    len(m.rows),
+		HighsecKills:  m.Kills(&highsec),
+		LowsecKills:   m.Kills(&lowsec),
+		NullsecKills:  m.Kills(&nullsec),
+		WormholeKills: m.Kills(&wormholes),
+		AbyssalKills:  m.Kills(&abyssal),
+	}
+	return stats, nil
 }
 
 func (m *mer) loadKillDump() error {

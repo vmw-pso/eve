@@ -7,19 +7,21 @@ import (
 	"github.com/gocarina/gocsv"
 )
 
-func NewAnalyzer(inputFilename string) *merNew {
+func NewAnalyzer(filename string) (*mer, error) {
 	fmt.Println("Creating new analyzer")
-	return &merNew{
-		inputFilename: inputFilename,
-		rows:          []NewRow{},
+	mer := &mer{
+		filename: filename,
+		rows:     []Row{},
 	}
+	if err := mer.loadMER(); err != nil {
+		return nil, err
+	}
+
+	return mer, nil
 }
 
 func (m *mer) Analyze() error {
 	// solarsystems, _ := sde.NewFromJSON("solarsystems.json")
-	if err := m.loadMER(); err != nil {
-		return err
-	}
 	fmt.Println(len(m.rows))
 	return nil
 }

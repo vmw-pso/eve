@@ -17,11 +17,11 @@ func NewAnalyzer(filename string) (*mer, error) {
 	if err := mer.loadKillDump(); err != nil {
 		return nil, err
 	}
-
 	return mer, nil
 }
 
 func (m *mer) Analyze() error {
+	fmt.Println("Analyzing...")
 	solarsystems, _ := sde.NewFromJSON("solarsystems.json")
 	highsec := solarsystems.HighsecSystems()
 	lowsec := solarsystems.LowsecSystems()

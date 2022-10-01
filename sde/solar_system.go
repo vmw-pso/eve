@@ -114,11 +114,11 @@ type StartStatistics struct {
 	Temperature   float64 `yaml:"temperature" json:"temperature"`
 }
 
-type cluster struct {
-	solarSystems []SolarSystem
+type Cluster struct {
+	SolarSystems []SolarSystem
 }
 
-func NewFromJSON(filename string) (*cluster, error) {
+func NewFromJSON(filename string) (*Cluster, error) {
 	file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		return nil, err
@@ -130,9 +130,9 @@ func NewFromJSON(filename string) (*cluster, error) {
 		return nil, err
 	}
 
-	var c cluster
+	var c Cluster
 
-	err = json.Unmarshal(data, &c.solarSystems)
+	err = json.Unmarshal(data, &c.SolarSystems)
 	if err != nil {
 		return nil, err
 	}
@@ -140,65 +140,65 @@ func NewFromJSON(filename string) (*cluster, error) {
 	return &c, nil
 }
 
-func (c *cluster) SystemsWithSecurity(min, max float64) cluster {
-	var systems cluster
-	for _, system := range c.solarSystems {
+func (c *Cluster) SystemsWithSecurity(min, max float64) Cluster {
+	var systems Cluster
+	for _, system := range c.SolarSystems {
 		if system.Security > min && system.Security <= max {
-			systems.solarSystems = append(systems.solarSystems, system)
+			systems.SolarSystems = append(systems.SolarSystems, system)
 		}
 	}
 	return systems
 }
 
-func (c *cluster) HighsecSystems() cluster {
+func (c *Cluster) HighsecSystems() Cluster {
 	return c.SystemsWithSecurity(0.45, 1.0)
 }
 
-func (c *cluster) LowsecSystems() cluster {
+func (c *Cluster) LowsecSystems() Cluster {
 	return c.SystemsWithSecurity(0.0, 0.45)
 }
 
-func (c *cluster) NullsecSystems() cluster {
+func (c *Cluster) NullsecSystems() Cluster {
 	kspace := c.KSpaceSystems()
-	var systems cluster
-	for _, system := range kspace.solarSystems {
+	var systems Cluster
+	for _, system := range kspace.SolarSystems {
 		if system.Security <= 0.0 && !isJove(system) {
-			systems.solarSystems = append(systems.solarSystems, system)
+			systems.SolarSystems = append(systems.SolarSystems, system)
 		}
 	}
 	return systems
 }
 
-func (c *cluster) SystemCount() int {
-	return len(c.solarSystems)
+func (c *Cluster) SystemCount() int {
+	return len(c.SolarSystems)
 }
 
-func (c *cluster) RegionCount() int {
+func (c *Cluster) RegionCount() int {
 	regions := make(map[string]int)
-	for _, system := range c.solarSystems {
+	for _, system := range c.SolarSystems {
 		regions[system.RegionName] = 1
 	}
 	return len(regions)
 }
 
-func (c *cluster) KSpaceSystems() cluster {
+func (c *Cluster) KSpaceSystems() Cluster {
 	var systems []SolarSystem
-	for _, system := range c.solarSystems {
+	for _, system := range c.SolarSystems {
 		if system.SolarSystemTypeName == "eve" {
 			systems = append(systems, system)
 		}
 	}
-	return cluster{solarSystems: systems}
+	return Cluster{SolarSystems: systems}
 }
 
-func (c *cluster) JSpaceSystems() cluster {
+func (c *Cluster) JSpaceSystems() Cluster {
 	var systems []SolarSystem
-	for _, system := range c.solarSystems {
+	for _, system := range c.SolarSystems {
 		if system.SolarSystemTypeName == "wormhole" {
 			systems = append(systems, system)
 		}
 	}
-	return cluster{solarSystems: systems}
+	return Cluster{SolarSystems: systems}
 }
 
 func isJove(solarSystem SolarSystem) bool {
@@ -211,9 +211,9 @@ func isJove(solarSystem SolarSystem) bool {
 	return false
 }
 
-func (c *cluster) SystemsInConstellation(constellationName string) []SolarSystem {
+func (c *Cluster) SystemsInConstellation(constellationName string) []SolarSystem {
 	var constellation []SolarSystem
-	for _, system := range c.solarSystems {
+	for _, system := range c.SolarSystems {
 		if system.ConstellationName == constellationName {
 			constellation = append(constellation, system)
 		}

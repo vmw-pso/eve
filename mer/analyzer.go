@@ -28,12 +28,14 @@ func (m *mer) Analyze() error {
 	nullsec := solarsystems.NullsecSystems()
 	wormholes := solarsystems.JSpaceSystems()
 	abyssal := solarsystems.AbyssalSystems()
+	void := solarsystems.VoidSystems()
 	fmt.Printf("Total kills: %d\n", len(m.rows))
 	fmt.Printf("Highsec Kills: %d\n", m.Kills(&highsec))
 	fmt.Printf("Lowsec Kills: %d\n", m.Kills(&lowsec))
 	fmt.Printf("Nullsec Kills: %d\n", m.Kills(&nullsec))
 	fmt.Printf("Wormhole Kills: %d\n", m.Kills(&wormholes))
 	fmt.Printf("Abyssal Kills: %d\n", m.Kills(&abyssal))
+	fmt.Printf("Void Kills: %d\n", m.Kills(&void))
 	return nil
 }
 

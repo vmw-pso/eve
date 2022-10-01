@@ -179,6 +179,16 @@ func (c *Cluster) AbyssalSystems() Cluster {
 	return systems
 }
 
+func (c *Cluster) VoidSystems() Cluster {
+	var systems Cluster
+	for _, system := range c.SolarSystems {
+		if system.SolarSystemTypeName == "void" {
+			systems.SolarSystems = append(systems.SolarSystems, system)
+		}
+	}
+	return systems
+}
+
 func (c *Cluster) SystemCount() int {
 	return len(c.SolarSystems)
 }

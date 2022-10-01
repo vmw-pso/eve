@@ -13,7 +13,7 @@ func NewAnalyzer(filename string) (*mer, error) {
 		filename: filename,
 		rows:     []Row{},
 	}
-	if err := mer.loadMER(); err != nil {
+	if err := mer.loadKillDump(); err != nil {
 		return nil, err
 	}
 
@@ -26,7 +26,7 @@ func (m *mer) Analyze() error {
 	return nil
 }
 
-func (m *mer) loadMER() error {
+func (m *mer) loadKillDump() error {
 	file, err := os.OpenFile(m.filename, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		return err

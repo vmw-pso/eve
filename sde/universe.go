@@ -27,6 +27,10 @@ func New(filename string) (*sde, error) {
 	return s, nil
 }
 
+func (s *sde) SolarSystems() []*SolarSystem {
+	return s.solarSystems
+}
+
 // WriteFileStructure writes out the fullpath to each document in the SDE zipfile
 func (s *sde) WriteFileStructure(outfile string) error {
 	zf, err := zip.OpenReader(s.filename)

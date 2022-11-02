@@ -15,7 +15,7 @@ type SolarSystem struct {
 	International       bool             `yaml:"international" csv:"international" json:"international"`
 	Max                 []float64        `yaml:"max" json:"max"`
 	Min                 []float64        `yaml:"min" json:"min"`
-	Planets             map[int]Planet   `yaml:"planets.omitEmpty" json:"planets,omitempty"`
+	Planets             map[int]Planet   `yaml:"planets,omitempty" json:"planets,omitempty"`
 	Radius              float64          `yaml:"radius" csv:"radius" json:"radius"`
 	Regional            bool             `yaml:"regional" csv:"regional" json:"regional"`
 	Security            float64          `yaml:"security" csv:"security" json:"security"`
@@ -36,10 +36,10 @@ type SolarSystemSummary struct {
 	RegionName        string  `csv:"regionName,omitempty" json:"regionName,omitempty"`
 	ConstellationName string  `csv:"constellationName,omitEmpty" json:"constellationName,omitempty"`
 	Security          float64 `csv:"security" json:"security"`
-	Planets           int     `yaml:"planets" json:"planets,omitempty"`
-	Moons             int     `yaml:"moons" json:"moons,omitempty"`
-	AsteroidBelts     int     `yaml:"asteroidBelts" json:"asteroidBelts,omitempty"`
-	Stargates         int     `yaml:"stargates" json:"stargates,omitempty"`
+	Planets           int     `yaml:"planets" csv:"planets" json:"planets"`
+	Moons             int     `yaml:"moons" csv:"moons" json:"moons"`
+	AsteroidBelts     int     `yaml:"asteroidBelts" csv:"asteroidBelts" json:"asteroidBelts"`
+	Stargates         int     `yaml:"stargates" csv:"stargates" json:"stargates"`
 }
 
 type Planet struct {
